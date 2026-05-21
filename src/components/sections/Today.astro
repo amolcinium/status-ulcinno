@@ -1,0 +1,62 @@
+---
+import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
+
+const { data: items, error } = await supabase
+  .from('priority_queue')
+  .select('id, title, description, scope, rank, is_blocker, blocked_by, project_id, due_date, completed_at')
+  .in('scope', ['today', 'this_week'])
+  .is('completed_at', null)
+  .order('rank', { ascending: true })
+  .limit(5);
+
+const todayItems = items?.filter(i => i.scope === 'today') || [];
+const weekItems = items?.filter(i => i.scope === 'this_week') || [];
+---
+<Section title="Today + This Week" icon="🎯" badge={items?.length || 0} badgeColor="blue">
+  {error && (
+    <p class="text-xs text-accent-red">Supabase error: {error.message}</p>
+  )}
+
+  {(items?.length === 0 || !items) && !error && (
+    <p class="text-sm text-gray-500 italic">No priorities set. Add via dashboard or pending_actions.</p>
+  )}
+
+  {todayItems.length > 0 && (
+    <>
+      <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-2">Today</h3>
+      <ul class="space-y-2 mb-4">
+        {todayItems.map(item => (
+          <li class="flex items-start gap-2 text-sm">
+            <span class={item.is_blocker ? 'text-accent-red' : 'text-gray-400'}>
+              {item.is_blocker ? '🔴' : '🟢'}
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium truncate">{item.title}</p>
+              {item.blocked_by && <p class="text-xs text-gray-500">blocked: {item.blocked_by}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  {weekItems.length > 0 && (
+    <>
+      <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-2">This Week</h3>
+      <ul class="space-y-2">
+        {weekItems.map(item => (
+          <li class="flex items-start gap-2 text-sm">
+            <span class={item.is_blocker ? 'text-accent-red' : 'text-gray-400'}>
+              {item.is_blocker ? '🔴' : '⚪'}
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="truncate">{item.title}</p>
+              {item.blocked_by && <p class="text-xs text-gray-500">blocked: {item.blocked_by}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+</Section>

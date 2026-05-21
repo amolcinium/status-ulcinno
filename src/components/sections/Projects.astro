@@ -1,0 +1,43 @@
+---
+import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
+
+const { data: projects, error } = await supabase
+  .from('projects')
+  .select('id, slug, name, status, description, budget_eur')
+  .eq('status', 'active')
+  .order('name', { ascending: true });
+
+const statusColor = (status: string) => {
+  if (status === 'active') return 'text-accent-green';
+  if (status === 'planning') return 'text-accent-yellow';
+  if (status === 'paused') return 'text-gray-500';
+  return 'text-gray-400';
+};
+---
+<Section title="Active Projects" icon="📁" badge={projects?.length || 0} badgeColor="green">
+  {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
+
+  {(!projects || projects.length === 0) && !error && (
+    <p class="text-sm text-gray-500 italic">No projects loaded.</p>
+  )}
+
+  {projects && projects.length > 0 && (
+    <ul class="space-y-2">
+      {projects.map(p => (
+        <li class="flex items-baseline justify-between gap-2 text-sm border-b border-bg-border/50 last:border-0 pb-2 last:pb-0">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline gap-2">
+              <span class={`text-xs ${statusColor(p.status)}`}>●</span>
+              <span class="font-medium truncate">{p.name}</span>
+            </div>
+            {p.description && (
+              <p class="text-xs text-gray-500 line-clamp-1 ml-4">{p.description}</p>
+            )}
+          </div>
+          <code class="text-xs text-gray-600 font-mono shrink-0">{p.slug}</code>
+        </li>
+      ))}
+    </ul>
+  )}
+</Section>

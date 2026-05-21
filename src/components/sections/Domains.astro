@@ -1,0 +1,42 @@
+---
+import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
+
+const { data: domains, error } = await supabase
+  .from('domains')
+  .select('id, domain, parent_domain, registrar, is_active, health_status, expires_at, ssl_expires_at')
+  .eq('is_active', true)
+  .order('parent_domain', { ascending: true, nullsFirst: true })
+  .order('domain', { ascending: true });
+
+const grouped = (domains || []).reduce((acc, d) => {
+  const key = d.parent_domain || d.domain;
+  if (!acc[key]) acc[key] = { apex: null as any, subs: [] as any[] };
+  if (!d.parent_domain) acc[key].apex = d;
+  else acc[key].subs.push(d);
+  return acc;
+}, {} as Record<string, { apex: any; subs: any[] }>);
+---
+<Section title="Domains" icon="🌐" badge={domains?.length || 0} badgeColor="blue">
+  {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
+
+  {(!domains || domains.length === 0) && !error && (
+    <p class="text-sm text-gray-500 italic">No domains loaded.</p>
+  )}
+
+  {Object.entries(grouped).map(([apexDomain, group]) => (
+    <div class="mb-3 last:mb-0">
+      <div class="text-sm font-medium">{apexDomain}</div>
+      {group.subs.length > 0 && (
+        <ul class="ml-3 mt-1 space-y-0.5 text-xs text-gray-400">
+          {group.subs.map(sub => (
+            <li class="flex items-center gap-2">
+              <span class="text-gray-600">└</span>
+              <span class="font-mono">{sub.domain.replace(`.${apexDomain}`, '')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  ))}
+</Section>

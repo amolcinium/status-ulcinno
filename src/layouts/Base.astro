@@ -1,0 +1,57 @@
+---
+interface Props {
+  title?: string;
+}
+const { title = 'Ardi Command Center' } = Astro.props;
+const now = new Date();
+const dateStr = now.toLocaleDateString('sr-Latn', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+const timeStr = now.toLocaleTimeString('sr-Latn', { hour: '2-digit', minute: '2-digit' });
+---
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#10b981" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CC" />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="min-h-screen bg-bg-base text-gray-100 font-sans antialiased">
+    <header class="sticky top-0 z-10 bg-bg-base/95 backdrop-blur border-b border-bg-border">
+      <div class="max-w-screen-md mx-auto px-4 py-3 flex justify-between items-baseline">
+        <div>
+          <h1 class="text-lg font-bold tracking-tight">Command Center</h1>
+          <p class="text-xs text-gray-500">{dateStr} · {timeStr}</p>
+        </div>
+        <div class="flex gap-2 text-xs">
+          <a href="/" class="px-2 py-1 rounded bg-bg-card hover:bg-bg-border transition">↻</a>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-screen-md mx-auto px-4 py-4 space-y-4">
+      <slot />
+    </main>
+    <footer class="max-w-screen-md mx-auto px-4 py-6 text-xs text-gray-600">
+      <p>status.ulcinno.me · built by Ardi + Claude · <a href="https://github.com/maverick-sea/status-ulcinno" class="underline hover:text-gray-400">repo</a></p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: dark;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+  }
+  body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+</style>

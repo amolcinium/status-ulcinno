@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import Today from '../components/sections/Today.astro';
+import Projects from '../components/sections/Projects.astro';
+import Ideas from '../components/sections/Ideas.astro';
+import System from '../components/sections/System.astro';
+import SelfCheck from '../components/sections/SelfCheck.astro';
+import Domains from '../components/sections/Domains.astro';
+import Finance from '../components/sections/Finance.astro';
+import PendingActions from '../components/sections/PendingActions.astro';
+import Sessions from '../components/sections/Sessions.astro';
+import Learn from '../components/sections/Learn.astro';
+---
+<Base title="Command Center — Ardi">
+  <!-- Top priority -->
+  <Today />
+  <PendingActions />
+
+  <!-- Work overview -->
+  <Projects />
+  <Ideas />
+
+  <!-- Money + system -->
+  <Finance />
+  <SelfCheck />
+
+  <!-- Infrastructure -->
+  <System />
+  <Domains />
+
+  <!-- Continuity + learning -->
+  <Sessions />
+  <Learn />
+</Base>

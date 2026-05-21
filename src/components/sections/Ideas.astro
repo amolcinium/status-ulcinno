@@ -1,0 +1,51 @@
+---
+import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
+
+const { data: ideas, error } = await supabase
+  .from('ideas')
+  .select('id, title, one_liner, state, fit_score, source, created_at')
+  .neq('state', 'killed')
+  .order('created_at', { ascending: false })
+  .limit(20);
+
+const grouped = {
+  intake: ideas?.filter(i => i.state === 'intake') || [],
+  analyzing: ideas?.filter(i => i.state === 'analyzing') || [],
+  validated: ideas?.filter(i => i.state === 'validated') || [],
+  active: ideas?.filter(i => i.state === 'active') || [],
+};
+
+const stateEmoji = { intake: '💡', analyzing: '🔬', validated: '✅', active: '🚀' };
+---
+<Section title="Idea Pipeline" icon="💡" badge={ideas?.length || 0} badgeColor="yellow">
+  {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
+
+  {(!ideas || ideas.length === 0) && !error && (
+    <p class="text-sm text-gray-500 italic">No ideas yet. Add via pending_actions from claude.ai mobile.</p>
+  )}
+
+  {ideas && ideas.length > 0 && (
+    <div class="space-y-4">
+      {(Object.keys(grouped) as Array<keyof typeof grouped>).map(state => (
+        grouped[state].length > 0 && (
+          <div>
+            <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-2">
+              {stateEmoji[state]} {state} ({grouped[state].length})
+            </h3>
+            <ul class="space-y-1">
+              {grouped[state].map(idea => (
+                <li class="text-sm flex items-baseline justify-between gap-2">
+                  <span class="truncate">{idea.title}</span>
+                  {idea.fit_score && (
+                    <span class="text-xs text-gray-500 shrink-0">{idea.fit_score}/100</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      ))}
+    </div>
+  )}
+</Section>

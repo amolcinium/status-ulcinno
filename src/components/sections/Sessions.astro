@@ -1,0 +1,20 @@
+---
+import Section from '../Section.astro';
+
+// Placeholder — Phase 3 wires real /home/ardim/.claude/state/sessions/*.crashed.json via VPS rsync + n8n cron
+const placeholder = [
+  { id: 'demo', status: 'note', title: 'Phase 3 — wire crashed sessions from ~/.claude/state/sessions/' },
+];
+---
+<Section title="Sessions" icon="🔄" badge={placeholder.length} badgeColor="blue">
+  <ul class="space-y-2 text-sm">
+    {placeholder.map(s => (
+      <li class="text-gray-500 italic text-xs">
+        {s.title}
+      </li>
+    ))}
+  </ul>
+  <p class="text-xs text-gray-600 mt-3">
+    Will show: active sessions, crashed sessions with [Copy Resume Context] button, recent decisions from decisions.jsonl
+  </p>
+</Section>

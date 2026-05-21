@@ -1,0 +1,41 @@
+---
+import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
+
+const { data: actions, error } = await supabase
+  .from('pending_actions')
+  .select('id, source, action_type, payload, status, notes, created_at')
+  .eq('status', 'pending')
+  .order('created_at', { ascending: false })
+  .limit(10);
+
+const sourceIcon: Record<string, string> = {
+  dashboard: '🖥️',
+  claude_mobile: '📱',
+  mobile_voice: '🎙️',
+  pwa: '📲',
+  manual: '✋',
+};
+---
+<Section title="Pending Actions" icon="⏳" badge={actions?.length || 0} badgeColor={actions && actions.length > 0 ? 'yellow' : 'green'}>
+  {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
+
+  {(!actions || actions.length === 0) && !error && (
+    <p class="text-sm text-gray-500 italic">No pending actions. Mobile-to-VSC bridge clean.</p>
+  )}
+
+  {actions && actions.length > 0 && (
+    <ul class="space-y-2 text-sm">
+      {actions.map(a => (
+        <li class="flex items-start gap-2 border-b border-bg-border/50 last:border-0 pb-2 last:pb-0">
+          <span class="shrink-0">{sourceIcon[a.source] || '?'}</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium">{a.action_type}</p>
+            {a.notes && <p class="text-xs text-gray-500 line-clamp-2">{a.notes}</p>}
+            <p class="text-xs text-gray-600 mt-1">from {a.source} · {new Date(a.created_at).toLocaleString('sr-Latn', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Section>

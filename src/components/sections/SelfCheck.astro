@@ -1,0 +1,48 @@
+---
+import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
+
+const { data: proposals, error } = await supabase
+  .from('system_proposals')
+  .select('id, title, description, category, effort_hours, priority, status, rationale')
+  .in('status', ['pending', 'accepted'])
+  .order('priority', { ascending: false })
+  .order('created_at', { ascending: false })
+  .limit(10);
+
+const priorityColor = (p: string) => {
+  if (p === 'urgent') return 'text-accent-red';
+  if (p === 'high') return 'text-accent-yellow';
+  if (p === 'medium') return 'text-accent-blue';
+  return 'text-gray-500';
+};
+---
+<Section title="My Proposals (Self-Check)" icon="🧠" badge={proposals?.length || 0} badgeColor="blue">
+  {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
+
+  {(!proposals || proposals.length === 0) && !error && (
+    <p class="text-sm text-gray-500 italic">No pending proposals.</p>
+  )}
+
+  {proposals && proposals.length > 0 && (
+    <ul class="space-y-3">
+      {proposals.map(p => (
+        <li class="text-sm border-b border-bg-border/50 last:border-0 pb-3 last:pb-0">
+          <div class="flex items-start justify-between gap-2 mb-1">
+            <p class="font-medium flex-1 min-w-0">{p.title}</p>
+            <span class={`text-xs shrink-0 ${priorityColor(p.priority)}`}>
+              {p.priority}{p.effort_hours ? ` · ${p.effort_hours}h` : ''}
+            </span>
+          </div>
+          {p.rationale && (
+            <p class="text-xs text-gray-400 line-clamp-2">{p.rationale}</p>
+          )}
+          <div class="mt-1 text-xs">
+            <span class="text-gray-600">[{p.status}]</span>
+            {p.category && <span class="ml-2 text-gray-500">{p.category}</span>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Section>

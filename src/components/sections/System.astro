@@ -1,0 +1,36 @@
+---
+import Section from '../Section.astro';
+
+// Static for now — Phase 7 wires real probes to Langfuse / Better Stack / Coolify / Kuma
+const services = [
+  { name: 'LiteLLM proxy', url: 'litellm.ulcinno.me', status: 'up', icon: '🤖' },
+  { name: 'Langfuse', url: 'obs.ulcinno.me', status: 'up', icon: '📊' },
+  { name: 'OpenClaw MCP', url: 'api.ulcinno.me', status: 'up', icon: '🧠' },
+  { name: 'Supabase KB', url: 'frsgzfzvdxswqjpdmcsd', status: 'up', icon: '🗄️' },
+  { name: 'n8n workflows', url: 'api.ulcinno.me/n8n/', status: 'up', icon: '🔄' },
+  { name: 'Firecrawl', url: '3000 credits free', status: 'warn', icon: '🔥', note: '0/3000 used — needs wiring' },
+  { name: 'Better Stack', url: 'geobim.betteruptime.com', status: 'up', icon: '🩺' },
+];
+
+const statusColor = (s: string) => s === 'up' ? 'text-accent-green' : s === 'warn' ? 'text-accent-yellow' : 'text-accent-red';
+---
+<Section title="System Health" icon="⚙️" badge={services.length} badgeColor="green">
+  <ul class="space-y-2 text-sm">
+    {services.map(s => (
+      <li class="flex items-baseline justify-between gap-2 border-b border-bg-border/50 last:border-0 pb-2 last:pb-0">
+        <div class="flex items-baseline gap-2 flex-1 min-w-0">
+          <span>{s.icon}</span>
+          <div>
+            <p>{s.name}</p>
+            <p class="text-xs text-gray-500">{s.url}</p>
+            {s.note && <p class="text-xs text-accent-yellow">{s.note}</p>}
+          </div>
+        </div>
+        <span class={`text-xs font-mono ${statusColor(s.status)}`}>●</span>
+      </li>
+    ))}
+  </ul>
+  <p class="text-xs text-gray-600 mt-3 italic">
+    Phase 7: replace static with Langfuse + Coolify + Kuma API probes
+  </p>
+</Section>

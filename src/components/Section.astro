@@ -1,0 +1,30 @@
+---
+interface Props {
+  title: string;
+  icon?: string;
+  badge?: string | number;
+  badgeColor?: 'green' | 'yellow' | 'red' | 'blue';
+}
+const { title, icon, badge, badgeColor = 'blue' } = Astro.props;
+const badgeColors = {
+  green: 'bg-accent-green/20 text-accent-green',
+  yellow: 'bg-accent-yellow/20 text-accent-yellow',
+  red: 'bg-accent-red/20 text-accent-red',
+  blue: 'bg-accent-blue/20 text-accent-blue',
+};
+---
+<section class="bg-bg-card border border-bg-border rounded-lg overflow-hidden">
+  <header class="px-4 py-3 border-b border-bg-border flex justify-between items-center">
+    <h2 class="font-semibold text-sm uppercase tracking-wider text-gray-300">
+      {icon && <span class="mr-2">{icon}</span>}{title}
+    </h2>
+    {badge !== undefined && (
+      <span class={`text-xs px-2 py-0.5 rounded-full font-mono ${badgeColors[badgeColor]}`}>
+        {badge}
+      </span>
+    )}
+  </header>
+  <div class="p-4">
+    <slot />
+  </div>
+</section>

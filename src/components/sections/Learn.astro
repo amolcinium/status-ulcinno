@@ -1,0 +1,34 @@
+---
+import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
+
+const { data: items, error } = await supabase
+  .from('learning_log')
+  .select('id, title, content, source, category, action_taken, created_at')
+  .order('created_at', { ascending: false })
+  .limit(10);
+---
+<Section title="Learning Log" icon="📚" badge={items?.length || 0} badgeColor="blue">
+  {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
+
+  {(!items || items.length === 0) && !error && (
+    <p class="text-sm text-gray-500 italic">No learning entries yet. Phase 5 wires Karakeep + Miniflux ingest cron.</p>
+  )}
+
+  {items && items.length > 0 && (
+    <ul class="space-y-3">
+      {items.map(i => (
+        <li class="text-sm border-b border-bg-border/50 last:border-0 pb-3 last:pb-0">
+          <p class="font-medium">{i.title}</p>
+          {i.content && (
+            <p class="text-xs text-gray-400 line-clamp-2 mt-1">{i.content}</p>
+          )}
+          <div class="text-xs text-gray-600 mt-1">
+            {i.source && <span>{i.source}</span>}
+            {i.category && <span class="ml-2">· {i.category}</span>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Section>
