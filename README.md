@@ -65,3 +65,10 @@ Full 6-week build plan: `~/.claude/projects/-mnt-c-PlatformWeb-openclaw-mcp/memo
 ## Co-built by
 
 Ardi Mavriq + Claude (Opus 4.7) — 2026-05-20 onwards.
+
+
+## Deployment
+
+Deployed via Cloudflare Pages from `amolcinium/status-ulcinno` on auto-push.
+
+First deploy: 2026-05-21T03:38:15Z
