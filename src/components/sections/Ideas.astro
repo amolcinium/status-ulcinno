@@ -17,6 +17,7 @@ const grouped = {
 };
 
 const stateEmoji = { intake: '💡', analyzing: '🔬', validated: '✅', active: '🚀' };
+const groupedKeys = Object.keys(grouped) as Array<keyof typeof grouped>;
 ---
 <Section title="Idea Pipeline" icon="💡" badge={ideas?.length || 0} badgeColor="yellow">
   {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
@@ -27,7 +28,7 @@ const stateEmoji = { intake: '💡', analyzing: '🔬', validated: '✅', active
 
   {ideas && ideas.length > 0 && (
     <div class="space-y-4">
-      {(Object.keys(grouped) as Array<keyof typeof grouped>).map(state => (
+      {groupedKeys.map(state => (
         grouped[state].length > 0 && (
           <div>
             <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-2">
