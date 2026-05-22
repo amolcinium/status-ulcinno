@@ -4,26 +4,37 @@ import { supabase } from '@lib/supabase';
 
 const { data: ideas, error } = await supabase
   .from('ideas')
-  .select('id, title, one_liner, state, fit_score, source, created_at')
+  .select('id, title, one_liner, state, fit_score, source, estimated_value_eur, estimated_effort_hours, created_at')
   .neq('state', 'killed')
   .order('created_at', { ascending: false })
-  .limit(20);
+  .limit(30);
 
 const grouped = {
-  intake: ideas?.filter(i => i.state === 'intake') || [],
-  analyzing: ideas?.filter(i => i.state === 'analyzing') || [],
+  active:    ideas?.filter(i => i.state === 'active')    || [],
   validated: ideas?.filter(i => i.state === 'validated') || [],
-  active: ideas?.filter(i => i.state === 'active') || [],
+  analyzing: ideas?.filter(i => i.state === 'analyzing') || [],
+  intake:    ideas?.filter(i => i.state === 'intake')    || [],
 };
 
 const stateEmoji = { intake: '💡', analyzing: '🔬', validated: '✅', active: '🚀' };
 const groupedKeys = Object.keys(grouped) as Array<keyof typeof grouped>;
+
+const nextState: Record<string, string> = {
+  intake: 'analyzing',
+  analyzing: 'validated',
+  validated: 'active',
+};
+const nextLabel: Record<string, string> = {
+  intake: 'Analyze',
+  analyzing: 'Validate',
+  validated: 'Activate',
+};
 ---
 <Section title="Idea Pipeline" icon="💡" badge={ideas?.length || 0} badgeColor="yellow">
   {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
 
   {(!ideas || ideas.length === 0) && !error && (
-    <p class="text-sm text-gray-500 italic">No ideas yet. Add via pending_actions from claude.ai mobile.</p>
+    <p class="text-sm text-gray-500 italic">No ideas yet. Add via Claude Code MCP or pending_actions.</p>
   )}
 
   {ideas && ideas.length > 0 && (
@@ -34,13 +45,36 @@ const groupedKeys = Object.keys(grouped) as Array<keyof typeof grouped>;
             <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-2">
               {stateEmoji[state]} {state} ({grouped[state].length})
             </h3>
-            <ul class="space-y-1">
+            <ul class="space-y-2">
               {grouped[state].map(idea => (
-                <li class="text-sm flex items-baseline justify-between gap-2">
-                  <span class="truncate">{idea.title}</span>
-                  {idea.fit_score && (
-                    <span class="text-xs text-gray-500 shrink-0">{idea.fit_score}/100</span>
+                <li class="text-sm border-b border-gray-800/50 last:border-0 pb-2 last:pb-0">
+                  <div class="flex items-baseline justify-between gap-2 mb-0.5">
+                    <span class="font-medium truncate">{idea.title}</span>
+                    {idea.fit_score != null && (
+                      <span class="text-xs text-gray-500 shrink-0">{idea.fit_score}/100</span>
+                    )}
+                  </div>
+                  {idea.one_liner && (
+                    <p class="text-xs text-gray-500 line-clamp-1 mb-1">{idea.one_liner}</p>
                   )}
+                  <div class="flex gap-1 flex-wrap mt-1">
+                    {nextLabel[state] && (
+                      <form method="POST" action="/api/ideas/state" class="inline">
+                        <input type="hidden" name="id" value={idea.id} />
+                        <input type="hidden" name="state" value={nextState[state]} />
+                        <button type="submit" class="text-xs px-2 py-0.5 rounded border bg-blue-950/40 text-blue-400 border-blue-800/40 hover:bg-blue-900/60 transition-colors">
+                          {nextLabel[state]} →
+                        </button>
+                      </form>
+                    )}
+                    <form method="POST" action="/api/ideas/state" class="inline">
+                      <input type="hidden" name="id" value={idea.id} />
+                      <input type="hidden" name="state" value="killed" />
+                      <button type="submit" class="text-xs px-2 py-0.5 rounded border bg-red-950/40 text-red-400 border-red-800/40 hover:bg-red-900/60 transition-colors">
+                        Kill
+                      </button>
+                    </form>
+                  </div>
                 </li>
               ))}
             </ul>

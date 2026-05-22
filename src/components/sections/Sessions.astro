@@ -1,20 +1,53 @@
 ---
 import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
 
-// Placeholder — Phase 3 wires real /home/ardim/.claude/state/sessions/*.crashed.json via VPS rsync + n8n cron
-const placeholder = [
-  { id: 'demo', status: 'note', title: 'Phase 3 — wire crashed sessions from ~/.claude/state/sessions/' },
-];
+const { data: sessions, error } = await supabase
+  .from('sessions')
+  .select('id, started_at, ended_at, status, cwd, last_git_commit, summary, created_at')
+  .order('created_at', { ascending: false })
+  .limit(10);
+
+const statusIcon: Record<string, string> = {
+  active:    '🟢',
+  completed: '✅',
+  crashed:   '💥',
+};
 ---
-<Section title="Sessions" icon="🔄" badge={placeholder.length} badgeColor="blue">
-  <ul class="space-y-2 text-sm">
-    {placeholder.map(s => (
-      <li class="text-gray-500 italic text-xs">
-        {s.title}
-      </li>
-    ))}
-  </ul>
-  <p class="text-xs text-gray-600 mt-3">
-    Will show: active sessions, crashed sessions with [Copy Resume Context] button, recent decisions from decisions.jsonl
-  </p>
+<Section title="Sessions" icon="🔄" badge={sessions?.length || 0} badgeColor="blue">
+  {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
+
+  {(!sessions || sessions.length === 0) && !error && (
+    <div class="text-sm text-gray-500">
+      <p class="italic mb-1">No sessions logged yet.</p>
+      <p class="text-xs font-mono bg-gray-900 p-1 rounded">~/.claude/scripts/push-session.sh</p>
+    </div>
+  )}
+
+  {sessions && sessions.length > 0 && (
+    <ul class="space-y-2 text-sm">
+      {sessions.map(s => (
+        <li class="flex items-start gap-2 border-b border-gray-800/50 last:border-0 pb-2 last:pb-0">
+          <span class="shrink-0 mt-0.5">{statusIcon[s.status] || '❓'}</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-mono text-xs text-gray-300 truncate">{s.id}</p>
+            {s.summary && (
+              <p class="text-xs text-gray-400 line-clamp-2 mt-0.5">{s.summary}</p>
+            )}
+            {s.last_git_commit && (
+              <p class="text-xs text-gray-600 font-mono truncate">{s.last_git_commit}</p>
+            )}
+            <p class="text-xs text-gray-600 mt-0.5">
+              {s.started_at
+                ? new Date(s.started_at).toLocaleString('sr-Latn', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                : 'unknown start'
+              }
+              {' · '}{s.status}
+              {s.cwd && <span class="ml-1 opacity-50 truncate">{s.cwd.split('/').slice(-2).join('/')}</span>}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
 </Section>

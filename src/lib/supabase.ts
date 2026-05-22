@@ -92,3 +92,17 @@ export type Project = {
   budget_eur: number | null;
   budget_hours: number | null;
 };
+
+export type Session = {
+  id: string;
+  started_at: string | null;
+  ended_at: string | null;
+  status: 'active' | 'completed' | 'crashed';
+  cwd: string | null;
+  last_git_commit: string | null;
+  summary: string | null;
+  files_changed: string[];
+  decisions: unknown[];
+  archived_path: string | null;
+  created_at: string;
+};
