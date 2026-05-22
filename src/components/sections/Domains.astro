@@ -4,7 +4,7 @@ import { supabase } from '@lib/supabase';
 
 const { data: domains, error } = await supabase
   .from('domains')
-  .select('id, domain, parent_domain, registrar, is_active, health_status, expires_at, ssl_expires_at')
+  .select('id, domain, parent_domain, registrar, dns_provider, is_active, health_status, expires_at, ssl_expires_at')
   .eq('is_active', true)
   .order('parent_domain', { ascending: true, nullsFirst: true })
   .order('domain', { ascending: true });
@@ -16,6 +16,29 @@ const grouped = (domains || []).reduce((acc, d) => {
   else acc[key].subs.push(d);
   return acc;
 }, {} as Record<string, { apex: any; subs: any[] }>);
+
+const now = Date.now();
+const msPerDay = 86_400_000;
+
+function daysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  return Math.ceil((new Date(dateStr).getTime() - now) / msPerDay);
+}
+
+function expiryBadge(days: number | null): string {
+  if (days === null) return '';
+  if (days < 0) return '🔴 EXPIRED';
+  if (days < 30) return `🔴 ${days}d`;
+  if (days < 90) return `🟡 ${days}d`;
+  return `🟢 ${days}d`;
+}
+
+function healthDot(status: string | null): string {
+  if (!status || status === 'unknown') return '⚪';
+  if (status === 'ok') return '🟢';
+  if (status === 'degraded') return '🟡';
+  return '🔴';
+}
 ---
 <Section title="Domains" icon="🌐" badge={domains?.length || 0} badgeColor="blue">
   {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}
@@ -24,19 +47,41 @@ const grouped = (domains || []).reduce((acc, d) => {
     <p class="text-sm text-gray-500 italic">No domains loaded.</p>
   )}
 
-  {Object.entries(grouped).map(([apexDomain, group]) => (
-    <div class="mb-3 last:mb-0">
-      <div class="text-sm font-medium">{apexDomain}</div>
-      {group.subs.length > 0 && (
-        <ul class="ml-3 mt-1 space-y-0.5 text-xs text-gray-400">
-          {group.subs.map(sub => (
-            <li class="flex items-center gap-2">
-              <span class="text-gray-600">└</span>
-              <span class="font-mono">{sub.domain.replace(`.${apexDomain}`, '')}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  ))}
+  <div class="space-y-2">
+    {Object.entries(grouped).map(([apexDomain, group]) => {
+      const apex = group.apex;
+      const domainExpiry = apex ? daysUntil(apex.expires_at) : null;
+      const sslExpiry = apex ? daysUntil(apex.ssl_expires_at) : null;
+      return (
+        <div>
+          <div class="flex items-center justify-between gap-2 text-sm">
+            <div class="flex items-center gap-1.5">
+              <span>{healthDot(apex?.health_status ?? null)}</span>
+              <span class="font-medium">{apexDomain}</span>
+              {apex?.registrar && <span class="text-xs text-gray-600">{apex.registrar}</span>}
+            </div>
+            <div class="flex gap-2 text-xs shrink-0">
+              {domainExpiry !== null && (
+                <span title="Domain renewal">{expiryBadge(domainExpiry)}</span>
+              )}
+              {sslExpiry !== null && (
+                <span title="SSL expiry" class="opacity-60">SSL {expiryBadge(sslExpiry)}</span>
+              )}
+            </div>
+          </div>
+          {group.subs.length > 0 && (
+            <ul class="ml-4 mt-0.5 space-y-0.5 text-xs text-gray-500">
+              {group.subs.map(sub => (
+                <li class="flex items-center gap-1.5">
+                  <span class="text-gray-700">└</span>
+                  <span>{healthDot(sub.health_status)}</span>
+                  <span class="font-mono">{sub.domain.replace(`.${apexDomain}`, '')}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    })}
+  </div>
 </Section>

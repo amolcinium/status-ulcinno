@@ -10,11 +10,11 @@ const { data: proposals, error } = await supabase
   .order('created_at', { ascending: false })
   .limit(10);
 
-const priorityColor = (p: string) => {
-  if (p === 'urgent') return 'text-accent-red';
-  if (p === 'high') return 'text-accent-yellow';
-  if (p === 'medium') return 'text-accent-blue';
-  return 'text-gray-500';
+const priorityBadge: Record<string, string> = {
+  urgent: 'text-red-400 border-red-800/40 bg-red-950/30',
+  high:   'text-yellow-400 border-yellow-800/40 bg-yellow-950/30',
+  medium: 'text-blue-400 border-blue-800/40 bg-blue-950/30',
+  low:    'text-gray-500 border-gray-700/40 bg-gray-900/30',
 };
 ---
 <Section title="My Proposals (Self-Check)" icon="🧠" badge={proposals?.length || 0} badgeColor="blue">
@@ -27,19 +27,39 @@ const priorityColor = (p: string) => {
   {proposals && proposals.length > 0 && (
     <ul class="space-y-3">
       {proposals.map(p => (
-        <li class="text-sm border-b border-bg-border/50 last:border-0 pb-3 last:pb-0">
+        <li class="text-sm border-b border-gray-800/50 last:border-0 pb-3 last:pb-0">
           <div class="flex items-start justify-between gap-2 mb-1">
             <p class="font-medium flex-1 min-w-0">{p.title}</p>
-            <span class={`text-xs shrink-0 ${priorityColor(p.priority)}`}>
+            <span class={`text-xs shrink-0 px-1.5 py-0.5 rounded border ${priorityBadge[p.priority] || priorityBadge.low}`}>
               {p.priority}{p.effort_hours ? ` · ${p.effort_hours}h` : ''}
             </span>
           </div>
           {p.rationale && (
-            <p class="text-xs text-gray-400 line-clamp-2">{p.rationale}</p>
+            <p class="text-xs text-gray-400 line-clamp-2 mb-1.5">{p.rationale}</p>
           )}
-          <div class="mt-1 text-xs">
-            <span class="text-gray-600">[{p.status}]</span>
-            {p.category && <span class="ml-2 text-gray-500">{p.category}</span>}
+          <div class="flex gap-1 flex-wrap items-center">
+            <form method="POST" action="/api/proposals/state" class="inline">
+              <input type="hidden" name="id" value={p.id} />
+              <input type="hidden" name="status" value="accepted" />
+              <button type="submit" class="text-xs px-2 py-0.5 rounded border bg-green-950/40 text-green-400 border-green-800/40 hover:bg-green-900/60 transition-colors">
+                Accept
+              </button>
+            </form>
+            <form method="POST" action="/api/proposals/state" class="inline">
+              <input type="hidden" name="id" value={p.id} />
+              <input type="hidden" name="status" value="deferred" />
+              <button type="submit" class="text-xs px-2 py-0.5 rounded border bg-yellow-950/40 text-yellow-500 border-yellow-800/40 hover:bg-yellow-900/60 transition-colors">
+                Defer
+              </button>
+            </form>
+            <form method="POST" action="/api/proposals/state" class="inline">
+              <input type="hidden" name="id" value={p.id} />
+              <input type="hidden" name="status" value="rejected" />
+              <button type="submit" class="text-xs px-2 py-0.5 rounded border bg-red-950/40 text-red-400 border-red-800/40 hover:bg-red-900/60 transition-colors">
+                Reject
+              </button>
+            </form>
+            {p.category && <span class="text-xs text-gray-600 ml-auto">{p.category}</span>}
           </div>
         </li>
       ))}
