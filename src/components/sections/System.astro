@@ -1,36 +1,39 @@
 ---
 import Section from '../Section.astro';
 
-// Static for now — Phase 7 wires real probes to Langfuse / Better Stack / Coolify / Kuma
+// Phase 7 wires real probes from Kuma/Langfuse/Coolify APIs.
+// For now: curated list updated manually when services change.
 const services = [
-  { name: 'LiteLLM proxy', url: 'litellm.ulcinno.me', status: 'up', icon: '🤖' },
-  { name: 'Langfuse', url: 'obs.ulcinno.me', status: 'up', icon: '📊' },
-  { name: 'OpenClaw MCP', url: 'api.ulcinno.me', status: 'up', icon: '🧠' },
-  { name: 'Supabase KB', url: 'frsgzfzvdxswqjpdmcsd', status: 'up', icon: '🗄️' },
-  { name: 'n8n workflows', url: 'api.ulcinno.me/n8n/', status: 'up', icon: '🔄' },
-  { name: 'Firecrawl', url: '3000 credits free', status: 'warn', icon: '🔥', note: '0/3000 used — needs wiring' },
-  { name: 'Better Stack', url: 'geobim.betteruptime.com', status: 'up', icon: '🩺' },
+  { name: 'OpenClaw MCP',    url: 'api.ulcinno.me',           status: 'up',   icon: '🧠', note: null },
+  { name: 'LiteLLM proxy',   url: 'litellm.ulcinno.me:4000',  status: 'up',   icon: '🤖', note: '3-tier fallback: Anthropic→DeepSeek→gpt-5-mini' },
+  { name: 'Langfuse v3',     url: 'obs.ulcinno.me',           status: 'up',   icon: '📊', note: 'All LLM traces + cost/latency per agent' },
+  { name: 'n8n',             url: 'api.ulcinno.me/n8n/',      status: 'up',   icon: '🔄', note: '9 workflows: briefs, alerts, grant-scan, KB bridge' },
+  { name: 'Uptime Kuma',     url: 'kuma.ulcinno.me',          status: 'up',   icon: '🩺', note: 'Monitor svih domena + servisa — setup pending' },
+  { name: 'Coolify',         url: '204.168.150.251:8000',     status: 'warn', icon: '🚢', note: 'v4.1.0 installed — browser init pending (Step 3)' },
+  { name: 'Supabase KB',     url: 'frsgzfzvdxswqjpdmcsd',    status: 'up',   icon: '🗄️', note: 'KB + dashboard + 60+ tables' },
+  { name: 'Firecrawl Hobby', url: 'firecrawl.dev',            status: 'up',   icon: '🔥', note: '3K credits/mo — agents + Deki scraping' },
+  { name: 'Better Stack',    url: 'geobim.betteruptime.com',  status: 'up',   icon: '⬆️', note: 'GeoBIM uptime + incident alerts' },
 ];
 
-const statusColor = (s: string) => s === 'up' ? 'text-accent-green' : s === 'warn' ? 'text-accent-yellow' : 'text-accent-red';
+const statusColor = (s: string) =>
+  s === 'up' ? 'text-green-400' : s === 'warn' ? 'text-yellow-400' : 'text-red-400';
+const statusDot = (s: string) =>
+  s === 'up' ? '🟢' : s === 'warn' ? '🟡' : '🔴';
 ---
-<Section title="System Health" icon="⚙️" badge={services.length} badgeColor="green">
-  <ul class="space-y-2 text-sm">
+<Section title="System Health" icon="⚙️" badge={services.filter(s => s.status === 'up').length} badgeColor="green">
+  <ul class="space-y-1.5 text-sm">
     {services.map(s => (
-      <li class="flex items-baseline justify-between gap-2 border-b border-bg-border/50 last:border-0 pb-2 last:pb-0">
-        <div class="flex items-baseline gap-2 flex-1 min-w-0">
-          <span>{s.icon}</span>
-          <div>
-            <p>{s.name}</p>
-            <p class="text-xs text-gray-500">{s.url}</p>
-            {s.note && <p class="text-xs text-accent-yellow">{s.note}</p>}
+      <li class="flex items-start gap-2 border-b border-gray-800/40 last:border-0 pb-1.5 last:pb-0">
+        <span class="shrink-0 mt-0.5">{s.icon}</span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <span class="font-medium">{s.name}</span>
+            <span class="text-xs">{statusDot(s.status)}</span>
           </div>
+          {s.note && <p class="text-xs text-gray-500 line-clamp-1">{s.note}</p>}
+          <p class="text-xs text-gray-700 font-mono">{s.url}</p>
         </div>
-        <span class={`text-xs font-mono ${statusColor(s.status)}`}>●</span>
       </li>
     ))}
   </ul>
-  <p class="text-xs text-gray-600 mt-3 italic">
-    Phase 7: replace static with Langfuse + Coolify + Kuma API probes
-  </p>
 </Section>
