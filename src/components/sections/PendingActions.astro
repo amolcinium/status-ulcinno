@@ -34,6 +34,12 @@ const sourceIcon: Record<string, string> = {
             {a.notes && <p class="text-xs text-gray-500 line-clamp-2">{a.notes}</p>}
             <p class="text-xs text-gray-600 mt-1">from {a.source} · {new Date(a.created_at).toLocaleString('sr-Latn', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
           </div>
+          <form method="POST" action="/api/actions/done" class="shrink-0">
+            <input type="hidden" name="id" value={a.id} />
+            <button type="submit" class="text-xs px-2 py-0.5 rounded border bg-green-950/40 text-green-400 border-green-800/40 hover:bg-green-900/60 transition-colors">
+              Done ✓
+            </button>
+          </form>
         </li>
       ))}
     </ul>

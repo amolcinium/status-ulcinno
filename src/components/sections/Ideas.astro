@@ -83,4 +83,14 @@ const nextLabel: Record<string, string> = {
       ))}
     </div>
   )}
+
+  <form method="POST" action="/api/ideas/add" class="mt-4 flex gap-2 border-t border-bg-border/40 pt-4">
+    <input name="title" required type="text" placeholder="New idea title..." maxlength="80"
+      class="flex-1 min-w-0 rounded border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:border-brand-blue/50 focus:outline-none" />
+    <input name="one_liner" type="text" placeholder="One liner (optional)" maxlength="120"
+      class="flex-1 min-w-0 rounded border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:border-brand-blue/50 focus:outline-none hidden sm:block" />
+    <button type="submit" class="shrink-0 text-xs px-3 py-1.5 rounded border bg-blue-950/40 text-blue-400 border-blue-800/40 hover:bg-blue-900/60 transition-colors">
+      + Add
+    </button>
+  </form>
 </Section>
