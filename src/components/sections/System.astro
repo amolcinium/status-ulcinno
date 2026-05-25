@@ -1,42 +1,83 @@
 ---
 import Section from '../Section.astro';
+import { supabase } from '@lib/supabase';
 
-// Phase 7 wires real probes from Kuma/Langfuse/Coolify APIs.
-// For now: curated list updated manually when services change.
+// Checked 2026-05-25 — n8n version-check cron updates current/latest daily
 const services = [
-  { name: 'OpenClaw MCP',    url: 'api.ulcinno.me',           status: 'up', icon: '🧠', note: null },
-  { name: 'LiteLLM proxy',   url: 'litellm.ulcinno.me',       status: 'up', icon: '🤖', note: '3-tier fallback: Anthropic→DeepSeek→gpt-5-mini · per-agent $30/mo cap' },
-  { name: 'Langfuse v3',     url: 'obs.ulcinno.me',           status: 'up', icon: '📊', note: 'All LLM traces + cost/latency per agent' },
-  { name: 'n8n',             url: 'api.ulcinno.me/n8n/',      status: 'up', icon: '🔄', note: '11 workflows: briefs, alerts, grant-scan, KB bridge, R2 cron, BIM Audit' },
-  { name: 'Uptime Kuma',     url: 'kuma.ulcinno.me',          status: 'up', icon: '🩺', note: 'Monitors: OpenClaw + GeoBIM · Telegram alerts active · 2 instances' },
-  { name: 'Coolify',         url: '204.168.150.251:8000',     status: 'up', icon: '🚢', note: 'v4.1.0 · 4 containers healthy · configured 2026-05-24' },
-  { name: 'Monica CRM',      url: 'monica.ulcinno.me',        status: 'up', icon: '👥', note: 'Self-hosted personal CRM' },
-  { name: 'Miniflux RSS',    url: 'miniflux.ulcinno.me',      status: 'up', icon: '📰', note: 'Self-hosted RSS reader' },
-  { name: 'Karakeep',        url: 'karakeep.ulcinno.me',      status: 'up', icon: '🔖', note: 'Self-hosted bookmarks · read-it-later → KB' },
-  { name: 'Supabase KB',     url: 'frsgzfzvdxswqjpdmcsd',    status: 'up', icon: '🗄️', note: 'KB + dashboard + 60+ tables' },
-  { name: 'Firecrawl Hobby', url: 'firecrawl.dev',            status: 'up', icon: '🔥', note: '3K credits/mo — agents + Deki scraping' },
-  { name: 'Better Stack',    url: 'geobim.betteruptime.com',  status: 'up', icon: '⬆️', note: 'GeoBIM uptime + incident alerts' },
+  { name: 'Claude Code (WSL)', icon: '🤖', current: '2.1.119', latest: '2.1.150', status: 'up',  upgrade: 'npm update -g @anthropic-ai/claude-code', note: 'Run in WSL terminal' },
+  { name: 'Claude Code (VPS)', icon: '🤖', current: '2.1.150', latest: '2.1.150', status: 'up',  upgrade: null, note: 'claude update on VPS' },
+  { name: 'n8n',               icon: '🔄', current: '2.18.5',  latest: '2.21.7',  status: 'up',  upgrade: 'npm update -g n8n && systemctl restart n8n', note: '11 workflows · systemd service' },
+  { name: 'LiteLLM proxy',     icon: '🧠', current: '1.83.14', latest: '1.86.0',  status: 'up',  upgrade: 'docker pull ghcr.io/berriai/litellm:main-stable && docker compose -f /opt/litellm/docker-compose.yml up -d', note: '3-tier fallback · per-agent $30/mo cap' },
+  { name: 'Langfuse v3',       icon: '📊', current: '3.172.1', latest: '3.175.0', status: 'up',  upgrade: 'docker compose -f /opt/langfuse/docker-compose.yml pull && docker compose -f /opt/langfuse/docker-compose.yml up -d', note: 'All LLM traces + cost/latency' },
+  { name: 'Uptime Kuma',       icon: '🩺', current: '1.x',     latest: '2.3.2',   status: 'up',  upgrade: 'MAJOR — backup data first, migration required', note: 'Monitors OpenClaw + GeoBIM · Telegram alerts' },
+  { name: 'Coolify',           icon: '🚢', current: '4.1.0',   latest: null,      status: 'up',  upgrade: null, note: 'Self-updates via UI · 4 containers healthy' },
+  { name: 'Monica CRM',        icon: '👥', current: 'latest',  latest: null,      status: 'up',  upgrade: 'docker compose -f /opt/monica/docker-compose.yml pull && docker compose up -d', note: 'Self-hosted CRM · monica.ulcinno.me' },
+  { name: 'Miniflux RSS',      icon: '📰', current: 'latest',  latest: null,      status: 'up',  upgrade: 'docker compose -f /opt/miniflux/docker-compose.yml pull && docker compose up -d', note: 'miniflux.ulcinno.me' },
+  { name: 'Karakeep',          icon: '🔖', current: 'release', latest: null,      status: 'up',  upgrade: 'docker compose -f /opt/karakeep/docker-compose.yml pull && docker compose up -d', note: 'karakeep.ulcinno.me' },
+  { name: 'Supabase KB',       icon: '🗄️', current: 'managed', latest: null,      status: 'up',  upgrade: null, note: 'Auto-updated by Supabase · 60+ tables' },
+  { name: 'Firecrawl Hobby',   icon: '🔥', current: 'SaaS',    latest: null,      status: 'up',  upgrade: null, note: '3K credits/mo' },
+  { name: 'Better Stack',      icon: '⬆️', current: 'SaaS',    latest: null,      status: 'up',  upgrade: null, note: 'GeoBIM uptime + incident alerts' },
 ];
 
-const statusColor = (s: string) =>
-  s === 'up' ? 'text-green-400' : s === 'warn' ? 'text-yellow-400' : 'text-red-400';
+const needsUpdate = services.filter(s => s.latest && s.current !== s.latest && s.upgrade && !s.upgrade.startsWith('MAJOR'));
+const majorUpdate = services.filter(s => s.upgrade?.startsWith('MAJOR'));
+
 const statusDot = (s: string) =>
   s === 'up' ? '🟢' : s === 'warn' ? '🟡' : '🔴';
+
+function versionBadge(current: string, latest: string | null) {
+  if (!latest || current === latest || current === 'latest' || current === 'managed' || current === 'SaaS' || current === 'release') return null;
+  if (latest && current !== latest) return latest;
+  return null;
+}
 ---
-<Section title="System Health" icon="⚙️" badge={services.filter(s => s.status === 'up').length} badgeColor="green">
-  <ul class="space-y-1.5 text-sm">
-    {services.map(s => (
-      <li class="flex items-start gap-2 border-b border-gray-800/40 last:border-0 pb-1.5 last:pb-0">
-        <span class="shrink-0 mt-0.5">{s.icon}</span>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center justify-between gap-1">
-            <span class="font-medium">{s.name}</span>
-            <span class="text-xs">{statusDot(s.status)}</span>
+<Section
+  title="System Health"
+  icon="⚙️"
+  badge={needsUpdate.length + majorUpdate.length}
+  badgeColor={needsUpdate.length + majorUpdate.length > 0 ? 'yellow' : 'green'}
+>
+  {(needsUpdate.length + majorUpdate.length) > 0 && (
+    <div class="mb-3 text-xs text-yellow-400 border border-yellow-800/30 bg-yellow-950/20 rounded-lg px-3 py-2">
+      {needsUpdate.length} update{needsUpdate.length !== 1 ? 's' : ''} available
+      {majorUpdate.length > 0 && ` · ${majorUpdate.length} major (manual)`}
+    </div>
+  )}
+
+  <ul class="space-y-2 text-sm">
+    {services.map(s => {
+      const badge = versionBadge(s.current, s.latest);
+      const isMajor = s.upgrade?.startsWith('MAJOR');
+      return (
+        <li class="border-b border-gray-800/40 last:border-0 pb-2 last:pb-0">
+          <div class="flex items-center gap-2">
+            <span class="shrink-0">{s.icon}</span>
+            <span class="font-medium flex-1 min-w-0 truncate">{s.name}</span>
+            <span class="font-mono text-xs text-gray-600">{s.current}</span>
+            {badge && (
+              <span class={`text-xs px-1.5 py-0.5 rounded border shrink-0 ${isMajor ? 'text-red-400 border-red-800/40 bg-red-950/30' : 'text-yellow-400 border-yellow-800/40 bg-yellow-950/30'}`}>
+                →{badge}
+              </span>
+            )}
+            <span class="shrink-0 text-xs">{statusDot(s.status)}</span>
           </div>
-          {s.note && <p class="text-xs text-gray-500 line-clamp-1">{s.note}</p>}
-          <p class="text-xs text-gray-700 font-mono">{s.url}</p>
-        </div>
-      </li>
-    ))}
+          {s.note && <p class="text-xs text-gray-600 ml-6 mt-0.5 line-clamp-1">{s.note}</p>}
+          {badge && s.upgrade && !isMajor && (
+            <form method="POST" action="/api/actions/request-upgrade" class="ml-6 mt-1">
+              <input type="hidden" name="service" value={s.name} />
+              <input type="hidden" name="cmd" value={s.upgrade} />
+              <input type="hidden" name="from_ver" value={s.current} />
+              <input type="hidden" name="to_ver" value={s.latest || ''} />
+              <button type="submit" class="text-xs px-2 py-0.5 rounded border bg-blue-950/40 text-blue-400 border-blue-800/40 hover:bg-blue-900/60 transition-colors">
+                Schedule upgrade →{s.latest}
+              </button>
+            </form>
+          )}
+          {isMajor && badge && (
+            <p class="ml-6 mt-1 text-xs text-red-400">⚠️ Major upgrade — manual backup + migration required</p>
+          )}
+        </li>
+      );
+    })}
   </ul>
 </Section>
