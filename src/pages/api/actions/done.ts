@@ -1,21 +1,25 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 
-export const POST: APIRoute = async ({ request, redirect }) => {
+export const POST: APIRoute = async ({ request, redirect, locals }) => {
   const form = await request.formData();
   const id = form.get('id') as string | null;
 
   if (!id) return new Response('Missing id', { status: 400 });
 
+  const runtimeEnv = (locals as any)?.runtime?.env ?? {};
+  const serviceKey = runtimeEnv.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Server misconfig: SUPABASE_SERVICE_ROLE_KEY not set in CF Pages env', { status: 500 });
+
   const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL || 'https://frsgzfzvdxswqjpdmcsd.supabase.co',
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '',
+    runtimeEnv.PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL || 'https://frsgzfzvdxswqjpdmcsd.supabase.co',
+    serviceKey,
     { auth: { persistSession: false } }
   );
 
   const { error } = await supabase
     .from('pending_actions')
-    .update({ status: 'done' })
+    .update({ status: 'done', completed_at: new Date().toISOString() })
     .eq('id', id);
 
   if (error) return new Response(`Update failed: ${error.message}`, { status: 500 });
