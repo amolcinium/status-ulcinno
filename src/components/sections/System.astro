@@ -9,7 +9,7 @@ const services = [
   { name: 'n8n',               icon: '🔄', current: '2.22.5',  latest: '2.22.5',  status: 'up',  upgrade: null, note: '11 workflows · systemd service' },
   { name: 'LiteLLM proxy',     icon: '🧠', current: 'main-stable', latest: null,  status: 'up',  upgrade: 'docker pull ghcr.io/berriai/litellm:main-stable && docker compose -f /root/litellm/docker-compose.yml up -d', note: '3-tier fallback · per-agent $30/mo cap' },
   { name: 'Langfuse v3',       icon: '📊', current: '3.175.0', latest: '3.175.0', status: 'up',  upgrade: null, note: 'All LLM traces + cost/latency' },
-  { name: 'Uptime Kuma',       icon: '🩺', current: '1.x',     latest: '2.3.2',   status: 'up',  upgrade: 'MAJOR — backup data first, migration required', note: 'Monitors OpenClaw + GeoBIM · Telegram alerts' },
+  { name: 'Uptime Kuma',       icon: '🩺', current: '2.x',     latest: null,      status: 'up',  upgrade: null, note: 'Monitors OpenClaw + GeoBIM · Telegram alerts' },
   { name: 'Coolify',           icon: '🚢', current: '4.1.0',   latest: null,      status: 'up',  upgrade: null, note: 'Self-updates via UI · 4 containers healthy' },
   { name: 'Monica CRM',        icon: '👥', current: 'latest',  latest: null,      status: 'up',  upgrade: 'docker compose -f /opt/monica/docker-compose.yml pull && docker compose up -d', note: 'Self-hosted CRM · monica.ulcinno.me' },
   { name: 'Miniflux RSS',      icon: '📰', current: 'latest',  latest: null,      status: 'up',  upgrade: 'docker compose -f /opt/miniflux/docker-compose.yml pull && docker compose up -d', note: 'miniflux.ulcinno.me' },
