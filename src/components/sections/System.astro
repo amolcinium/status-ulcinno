@@ -4,7 +4,7 @@ import { supabase } from '@lib/supabase';
 
 // Checked 2026-05-31 — n8n version-check cron updates current/latest daily
 const services = [
-  { name: 'Claude Code (WSL)', icon: '🤖', current: '2.1.150', latest: '2.1.158', status: 'up',  upgrade: 'sudo npm update -g @anthropic-ai/claude-code', note: 'Run in WSL terminal' },
+  { name: 'Claude Code (WSL)', icon: '🤖', current: '2.1.158', latest: '2.1.158', status: 'up',  upgrade: null, note: 'sudo npm update -g @anthropic-ai/claude-code' },
   { name: 'Claude Code (VPS)', icon: '🤖', current: '2.1.158', latest: '2.1.158', status: 'up',  upgrade: null, note: 'claude update on VPS' },
   { name: 'n8n',               icon: '🔄', current: '2.22.5',  latest: '2.22.5',  status: 'up',  upgrade: null, note: '11 workflows · systemd service' },
   { name: 'LiteLLM proxy',     icon: '🧠', current: 'main-stable', latest: null,  status: 'up',  upgrade: 'docker pull ghcr.io/berriai/litellm:main-stable && docker compose -f /root/litellm/docker-compose.yml up -d', note: '3-tier fallback · per-agent $30/mo cap' },
