@@ -2,13 +2,13 @@
 import Section from '../Section.astro';
 import { supabase } from '@lib/supabase';
 
-// Checked 2026-05-25 — n8n version-check cron updates current/latest daily
+// Checked 2026-05-31 — n8n version-check cron updates current/latest daily
 const services = [
-  { name: 'Claude Code (WSL)', icon: '🤖', current: '2.1.119', latest: '2.1.150', status: 'up',  upgrade: 'npm update -g @anthropic-ai/claude-code', note: 'Run in WSL terminal' },
+  { name: 'Claude Code (WSL)', icon: '🤖', current: '2.1.150', latest: '2.1.150', status: 'up',  upgrade: null, note: 'Run: sudo npm update -g @anthropic-ai/claude-code' },
   { name: 'Claude Code (VPS)', icon: '🤖', current: '2.1.150', latest: '2.1.150', status: 'up',  upgrade: null, note: 'claude update on VPS' },
-  { name: 'n8n',               icon: '🔄', current: '2.18.5',  latest: '2.21.7',  status: 'up',  upgrade: 'npm update -g n8n && systemctl restart n8n', note: '11 workflows · systemd service' },
-  { name: 'LiteLLM proxy',     icon: '🧠', current: '1.83.14', latest: '1.86.0',  status: 'up',  upgrade: 'docker pull ghcr.io/berriai/litellm:main-stable && docker compose -f /opt/litellm/docker-compose.yml up -d', note: '3-tier fallback · per-agent $30/mo cap' },
-  { name: 'Langfuse v3',       icon: '📊', current: '3.172.1', latest: '3.175.0', status: 'up',  upgrade: 'docker compose -f /opt/langfuse/docker-compose.yml pull && docker compose -f /opt/langfuse/docker-compose.yml up -d', note: 'All LLM traces + cost/latency' },
+  { name: 'n8n',               icon: '🔄', current: '2.22.5',  latest: '2.22.5',  status: 'up',  upgrade: null, note: '11 workflows · systemd service' },
+  { name: 'LiteLLM proxy',     icon: '🧠', current: 'main-stable', latest: null,  status: 'up',  upgrade: 'docker pull ghcr.io/berriai/litellm:main-stable && docker compose -f /root/litellm/docker-compose.yml up -d', note: '3-tier fallback · per-agent $30/mo cap' },
+  { name: 'Langfuse v3',       icon: '📊', current: '3.175.0', latest: '3.175.0', status: 'up',  upgrade: null, note: 'All LLM traces + cost/latency' },
   { name: 'Uptime Kuma',       icon: '🩺', current: '1.x',     latest: '2.3.2',   status: 'up',  upgrade: 'MAJOR — backup data first, migration required', note: 'Monitors OpenClaw + GeoBIM · Telegram alerts' },
   { name: 'Coolify',           icon: '🚢', current: '4.1.0',   latest: null,      status: 'up',  upgrade: null, note: 'Self-updates via UI · 4 containers healthy' },
   { name: 'Monica CRM',        icon: '👥', current: 'latest',  latest: null,      status: 'up',  upgrade: 'docker compose -f /opt/monica/docker-compose.yml pull && docker compose up -d', note: 'Self-hosted CRM · monica.ulcinno.me' },
