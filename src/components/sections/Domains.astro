@@ -1,13 +1,16 @@
 ---
 import Section from '../Section.astro';
-import { supabase } from '@lib/supabase';
+import { serverClient, MISSING_SERVICE_KEY } from '@lib/supabase';
 
-const { data: domains, error } = await supabase
-  .from('domains')
-  .select('id, domain, parent_domain, registrar, dns_provider, is_active, health_status, expires_at, ssl_expires_at')
-  .eq('is_active', true)
-  .order('parent_domain', { ascending: true, nullsFirst: true })
-  .order('domain', { ascending: true });
+const supabase = serverClient(Astro.locals);
+const { data: domains, error } = supabase
+  ? await supabase
+      .from('domains')
+      .select('id, domain, parent_domain, registrar, dns_provider, is_active, health_status, expires_at, ssl_expires_at')
+      .eq('is_active', true)
+      .order('parent_domain', { ascending: true, nullsFirst: true })
+      .order('domain', { ascending: true })
+  : { data: null, error: MISSING_SERVICE_KEY };
 
 const grouped = (domains || []).reduce((acc, d) => {
   const key = d.parent_domain || d.domain;

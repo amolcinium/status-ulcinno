@@ -1,12 +1,15 @@
 ---
 import Section from '../Section.astro';
-import { supabase } from '@lib/supabase';
+import { serverClient, MISSING_SERVICE_KEY } from '@lib/supabase';
 
-const { data: projects, error } = await supabase
-  .from('projects')
-  .select('id, slug, name, status, description, budget_eur')
-  .eq('status', 'active')
-  .order('name', { ascending: true });
+const supabase = serverClient(Astro.locals);
+const { data: projects, error } = supabase
+  ? await supabase
+      .from('projects')
+      .select('id, slug, name, status, description, budget_eur')
+      .eq('status', 'active')
+      .order('name', { ascending: true })
+  : { data: null, error: MISSING_SERVICE_KEY };
 
 const statusColor = (status: string) => {
   if (status === 'active') return 'text-accent-green';

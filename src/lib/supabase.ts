@@ -14,6 +14,38 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
+/**
+ * Server-side client using the service-role key, which bypasses RLS.
+ *
+ * Why the sections can't use the anon client above: every dashboard table got RLS on
+ * 2026-08-02, and the policies that existed before that already targeted `authenticated`
+ * only — so anon reads had been silently returning [] for a while, which is why most of
+ * the dashboard rendered empty. On top of that the anon key is effectively public: it is
+ * hardcoded in committed source elsewhere in the monorepo (cadastre map, grant-ai
+ * frontend) and does not expire until 2036. Anything it can read, the internet can read.
+ *
+ * Astro frontmatter runs on the server and never ships to the browser, so the
+ * service-role key stays server-side. Only call this from .astro frontmatter or API
+ * routes — never from a client-side script.
+ */
+export function serverClient(locals: unknown) {
+  const runtimeEnv = (locals as any)?.runtime?.env ?? {};
+  const serviceKey =
+    runtimeEnv.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return null;
+
+  return createClient(
+    runtimeEnv.PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL || SUPABASE_URL,
+    serviceKey,
+    { auth: { persistSession: false } }
+  );
+}
+
+/** Shown in place of a Supabase error when the key is missing from the CF Pages env. */
+export const MISSING_SERVICE_KEY = {
+  message: 'SUPABASE_SERVICE_ROLE_KEY not set in CF Pages env',
+};
+
 // Type helpers for the new dashboard tables
 export type Idea = {
   id: string;

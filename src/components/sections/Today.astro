@@ -1,14 +1,17 @@
 ---
 import Section from '../Section.astro';
-import { supabase } from '@lib/supabase';
+import { serverClient, MISSING_SERVICE_KEY } from '@lib/supabase';
 
-const { data: items, error } = await supabase
-  .from('priority_queue')
-  .select('id, title, description, scope, rank, is_blocker, blocked_by, project_id, due_date, completed_at')
-  .in('scope', ['today', 'this_week'])
-  .is('completed_at', null)
-  .order('rank', { ascending: true })
-  .limit(5);
+const supabase = serverClient(Astro.locals);
+const { data: items, error } = supabase
+  ? await supabase
+      .from('priority_queue')
+      .select('id, title, description, scope, rank, is_blocker, blocked_by, project_id, due_date, completed_at')
+      .in('scope', ['today', 'this_week'])
+      .is('completed_at', null)
+      .order('rank', { ascending: true })
+      .limit(5)
+  : { data: null, error: MISSING_SERVICE_KEY };
 
 const todayItems = items?.filter(i => i.scope === 'today') || [];
 const weekItems = items?.filter(i => i.scope === 'this_week') || [];

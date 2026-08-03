@@ -1,13 +1,16 @@
 ---
 import Section from '../Section.astro';
-import { supabase } from '@lib/supabase';
+import { serverClient, MISSING_SERVICE_KEY } from '@lib/supabase';
 
-const { data: ideas, error } = await supabase
-  .from('ideas')
-  .select('id, title, one_liner, state, fit_score, source, estimated_value_eur, estimated_effort_hours, created_at')
-  .neq('state', 'killed')
-  .order('created_at', { ascending: false })
-  .limit(30);
+const supabase = serverClient(Astro.locals);
+const { data: ideas, error } = supabase
+  ? await supabase
+      .from('ideas')
+      .select('id, title, one_liner, state, fit_score, source, estimated_value_eur, estimated_effort_hours, created_at')
+      .neq('state', 'killed')
+      .order('created_at', { ascending: false })
+      .limit(30)
+  : { data: null, error: MISSING_SERVICE_KEY };
 
 const grouped = {
   active:    ideas?.filter(i => i.state === 'active')    || [],

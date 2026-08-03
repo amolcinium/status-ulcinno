@@ -1,14 +1,17 @@
 ---
 import Section from '../Section.astro';
-import { supabase } from '@lib/supabase';
+import { serverClient, MISSING_SERVICE_KEY } from '@lib/supabase';
 
-const { data: proposals, error } = await supabase
-  .from('system_proposals')
-  .select('id, title, description, category, effort_hours, priority, status, rationale')
-  .in('status', ['pending', 'accepted'])
-  .order('priority', { ascending: false })
-  .order('created_at', { ascending: false })
-  .limit(10);
+const supabase = serverClient(Astro.locals);
+const { data: proposals, error } = supabase
+  ? await supabase
+      .from('system_proposals')
+      .select('id, title, description, category, effort_hours, priority, status, rationale')
+      .in('status', ['pending', 'accepted'])
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(10)
+  : { data: null, error: MISSING_SERVICE_KEY };
 
 const priorityBadge: Record<string, string> = {
   urgent: 'text-red-400 border-red-800/40 bg-red-950/30',

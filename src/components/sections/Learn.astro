@@ -1,12 +1,15 @@
 ---
 import Section from '../Section.astro';
-import { supabase } from '@lib/supabase';
+import { serverClient, MISSING_SERVICE_KEY } from '@lib/supabase';
 
-const { data: items, error } = await supabase
-  .from('learning_log')
-  .select('id, title, content, source, category, action_taken, created_at')
-  .order('created_at', { ascending: false })
-  .limit(10);
+const supabase = serverClient(Astro.locals);
+const { data: items, error } = supabase
+  ? await supabase
+      .from('learning_log')
+      .select('id, title, content, source, category, action_taken, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10)
+  : { data: null, error: MISSING_SERVICE_KEY };
 ---
 <Section title="Learning Log" icon="📚" badge={items?.length || 0} badgeColor="blue">
   {error && <p class="text-xs text-accent-red">Supabase error: {error.message}</p>}

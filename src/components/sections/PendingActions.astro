@@ -1,13 +1,16 @@
 ---
 import Section from '../Section.astro';
-import { supabase } from '@lib/supabase';
+import { serverClient, MISSING_SERVICE_KEY } from '@lib/supabase';
 
-const { data: actions, error } = await supabase
-  .from('pending_actions')
-  .select('id, source, action_type, payload, status, notes, created_at')
-  .eq('status', 'pending')
-  .order('created_at', { ascending: false })
-  .limit(10);
+const supabase = serverClient(Astro.locals);
+const { data: actions, error } = supabase
+  ? await supabase
+      .from('pending_actions')
+      .select('id, source, action_type, payload, status, notes, created_at')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(10)
+  : { data: null, error: MISSING_SERVICE_KEY };
 
 const sourceIcon: Record<string, string> = {
   dashboard: '🖥️',
