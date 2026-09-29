@@ -8,7 +8,7 @@ const dateStr = now.toLocaleDateString('sr-Latn', { weekday: 'short', day: '2-di
 const timeStr = now.toLocaleTimeString('sr-Latn', { hour: '2-digit', minute: '2-digit' });
 ---
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -16,12 +16,14 @@ const timeStr = now.toLocaleTimeString('sr-Latn', { hour: '2-digit', minute: '2-
     <!-- Licna komandna tabla — ne pripada pretrazivacima ni na jednom hostu. -->
     <meta name="robots" content="noindex, nofollow" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#10b981" />
+    <!-- ui-provjera:izuzeto — boja trake telefona (PWA) --><meta name="theme-color" content="#10b981" /><!-- ui-provjera:kraj -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="CC" />
     <title>{title}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/ui-v1.css" />
+    <script is:inline src="/ui-v1.js"></script>
   </head>
   <body class="min-h-screen bg-bg-base text-gray-100 font-sans antialiased">
     <header class="sticky top-0 z-10 bg-bg-base/95 backdrop-blur border-b border-bg-border">
@@ -31,7 +33,10 @@ const timeStr = now.toLocaleTimeString('sr-Latn', { hour: '2-digit', minute: '2-
           <p class="text-xs text-gray-500">{dateStr} · {timeStr}</p>
         </div>
         <div class="flex gap-2 text-xs">
-          <a href="/" class="px-2 py-1 rounded bg-bg-card hover:bg-bg-border transition">↻</a>
+          <a href="/" class="px-2 py-1 rounded bg-bg-card hover:bg-bg-border transition" aria-label="Osvježi">↻</a>
+          <select id="tema" class="px-2 py-1 rounded bg-bg-card border border-bg-border" aria-label="Tema">
+            <option value="auto">Auto</option><option value="light">Svijetla</option><option value="dark">Tamna</option>
+          </select>
         </div>
       </div>
     </header>
@@ -41,12 +46,17 @@ const timeStr = now.toLocaleTimeString('sr-Latn', { hour: '2-digit', minute: '2-
     <footer class="max-w-screen-md mx-auto px-4 py-6 text-xs text-gray-600">
       <p>status.ulcinno.me · built by Ardi + Claude · <a href="https://github.com/maverick-sea/status-ulcinno" class="underline hover:text-gray-400">repo</a></p>
     </footer>
+    <script is:inline>
+      const tema = document.getElementById('tema');
+      tema.value = document.documentElement.dataset.theme || 'auto';
+      tema.onchange = () => ui.theme(tema.value);
+    </script>
   </body>
 </html>
 
 <style is:global>
   :root {
-    color-scheme: dark;
+    --accent: #047857; --accent-light: #10b981;
   }
   html {
     -webkit-tap-highlight-color: transparent;
