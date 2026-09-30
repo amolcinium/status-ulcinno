@@ -1,5 +1,5 @@
 // ui-v1.js — pomoćnici uz ui-v1.css. Bez zavisnosti; učitava se sa <script src="ui-v1.js" defer>.
-// ui.toast(), ui.confirm(), ui.busy(), ui.fmt.*, ui.tabs(), ui.theme()
+// ui.toast(), ui.confirm(), ui.busy(), ui.fmt.*, ui.tabs()
 (function () {
   const ui = {};
 
@@ -73,12 +73,9 @@
     show(btns.find(b => b.getAttribute('aria-selected') === 'true') || btns[0]);
   };
 
-  // ui.theme('dark' | 'light' | 'auto') — pamti se po pregledaču
-  ui.theme = function (t) {
-    if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
-    try { localStorage.setItem('ui-theme', t); } catch {}
-  };
-  try { const t = localStorage.getItem('ui-theme'); if (t && t !== 'auto') document.documentElement.dataset.theme = t; } catch {}
+  // Samo svijetla tema (30.09.2026). Brise se izbor koji je pregledac zapamtio ranije.
+  try { localStorage.removeItem('ui-theme'); } catch {}
+  delete document.documentElement.dataset.theme;
 
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-tabs]').forEach(ui.tabs);
