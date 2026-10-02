@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { env } from 'cloudflare:workers';
 
 const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL || 'https://frsgzfzvdxswqjpdmcsd.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
@@ -29,7 +30,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
  * routes — never from a client-side script.
  */
 export function serverClient(locals: unknown) {
-  const runtimeEnv = (locals as any)?.runtime?.env ?? {};
+  // Od Astro 6 runtime env dolazi iz cloudflare:workers (Astro.locals.runtime ne postoji).
+  const runtimeEnv = env as unknown as Record<string, string | undefined>;
   const serviceKey =
     runtimeEnv.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return null;

@@ -1,0 +1,39 @@
+name: Objava na Cloudflare Workers
+
+# Push na main = produkcija status.ulcinno.me (Worker status-ulcinno, ruta u
+# wrangler.jsonc). Adapter 14 (Astro 7) ne gradi za Pages; Pages projekat
+# status-ulcinno ostaje samo kao povratak (obrisati rutu → Pages opet služi).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: objava
+  cancel-in-progress: false
+
+jobs:
+  objava:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      # PUBLIC_* se upisuju u build (import.meta.env); anon ključ je javan, ali ne stoji u repou.
+      - run: npm run build
+        env:
+          PUBLIC_SUPABASE_URL: https://frsgzfzvdxswqjpdmcsd.supabase.co
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: '08fc3a6d02d2677f326a944b65ac679d'
+          command: deploy
+      # Iza Cloudflare Access-a: bez prijave mora biti preusmjerenje na login.
+      - name: Provjera produkcije
+        run: |
+          loc=$(curl -s -o /dev/null -w '%{redirect_url}' https://status.ulcinno.me/)
+          echo "$loc"; case "$loc" in *cloudflareaccess.com*) ;; *) exit 1 ;; esac
