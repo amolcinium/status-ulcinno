@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
+import { env } from 'cloudflare:workers';
 
 export const POST: APIRoute = async ({ request, redirect, locals }) => {
   const form = await request.formData();
@@ -10,7 +11,8 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
 
   if (!service || !cmd) return new Response('Missing params', { status: 400 });
 
-  const runtimeEnv = (locals as any)?.runtime?.env ?? {};
+  // Od Astro 6 runtime env dolazi iz cloudflare:workers (Astro.locals.runtime ne postoji).
+  const runtimeEnv = env as unknown as Record<string, string | undefined>;
   const serviceKey = runtimeEnv.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return new Response('Server misconfig: SUPABASE_SERVICE_ROLE_KEY not set in CF Pages env', { status: 500 });
 
